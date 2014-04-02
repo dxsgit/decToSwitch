@@ -20,28 +20,13 @@
 #include <stdio.h>
 #include <string.h>
 
-/*将十进制转换成2进制输出*/
-void Ten2B(unsigned long num,int l)
-{
-    l++;
-    if(num>1){
-        Ten2B(num/2,l);
-    }
-    if (l%4 == 0){
-        printf(" ");
-    }
-    if (l%8 == 0){
-        printf(" ");
-    }
-    printf("%lu",num%2);
-    
-}
+
 
 /*异常输出时，显示帮助*/
 void help(char * strnum)
 {
     printf("参数无效，格式为:\n%s [num]\n",strnum);
-    printf("输入二进制格式为0xccc\n");
+    printf("输入二进制格式为0Bccc\n");
     printf("输入八进制格式为0ccc\n");
     printf("输入十六进制格式为0xccc\n");
     printf("输入十进制格式为ccc\n");
@@ -132,6 +117,125 @@ int strToInt(char *strn, unsigned long *num, int flag)
 
 }
 
+#if FIRST
+/*将十进制转换成2进制输出*/
+void Ten2B(unsigned long num,int l)
+{
+    l++;
+    if(num>1){
+        Ten2B(num/2,l);
+    }
+    if (l%4 == 0){
+        printf(" ");
+    }
+    if (l%8 == 0){
+        printf(" ");
+    }
+    printf("%lu",num%2);
+    
+}
+
+#else
+/*每偏移offset个数在str中添加一个空格，并将新生成的字符串赋给out*/
+void strFormat(char *str, char *out, int offset)
+{
+    int len = strlen(str);
+    int i ,j;
+    i = j = 0;
+    while(i < len %offset){
+        out[i] = str[j];
+        i++;
+        j++;
+    }
+    if (i != 0){
+        out[i] = ' ';
+        i++;
+    }
+    while(j < len){
+        int k = 0;
+        while(k < offset){
+            out[i+k] = str[j+k];
+            k++;
+        }
+        j+=k;
+        i+=k;
+        out[i] = ' ';
+        i++;
+    }
+}
+
+/*
+ * NAME: intToB
+ * 
+ * num[in]: 用于转化成2进制的整数
+ *
+ * str[out]:  用于存储转化后的2进制字符串
+ * 
+ * desc：将整数转化成二进制字符串
+ *
+ *
+ * */
+void intToB(unsigned long num, char *str)
+{
+    int len = 0;
+    while(num > 0){
+        str[len] = '0' + num%2;
+        num /= 2;
+        len++;
+    }
+    int j = 0;
+    while(j < len/2){
+        char tmp = str[j];
+        str[j] = str[len - 1 - j];
+        str[len - 1 - j] = tmp;
+        j++;
+    }
+}
+
+/*
+ * name: displayNum
+ *
+ * num[in] : 整数
+ *
+ * flag[in] : 输出显示类型：
+ *            10 十进制
+ *            16 十六进制
+ *            8  八进制
+ *            2  二进制
+ *
+ * desc: 将整数按照flag输出显示
+ *
+ * */
+void displyNum(unsigned long num, int flag)
+{
+    char str[64];
+    char out[100];
+    bzero(str,sizeof(str));
+    bzero(out,sizeof(out));
+    if(flag == 10){
+        sprintf(str, "%lu", num);
+        strFormat(str,out,3);
+        printf("  十进制：");
+    }
+    else if (flag == 8){
+        sprintf(str, "%lo", num);
+        strFormat(str,out,3);
+        printf("  八进制：");
+    }
+    else if (flag == 16){
+        sprintf(str, "%lx", num);
+        strFormat(str,out,2);
+        printf("十六进制：");
+    }
+    else if (flag == 2){
+        intToB(num,str);
+        strFormat(str,out,4);
+        printf("  二进制：");
+    }
+    printf("%s\n", out);
+}
+
+#endif
 int main(int argc, char **argv)
 {
     
@@ -186,13 +290,19 @@ int main(int argc, char **argv)
         help(argv[0]);
         return 0;
     }
-    
+    #if FIRST
     printf("十六进制：%lx\n",num);
     printf("  十进制：%lu\n",num);
     printf("  八进制：%lo\n",num);
     printf("  二进制：");
     Ten2B(num,0);
     printf("\n");
+    #else
+    displyNum(num, 16);
+    displyNum(num, 10);
+    displyNum(num, 8);
+    displyNum(num, 2);
+    #endif
     return 0;
 }
 
